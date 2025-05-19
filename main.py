@@ -7,28 +7,45 @@ from Scripts.player import Player
 from Scripts.resource import Resource
 from Scripts.turret import Turret
 from Scripts.projectile import Projectile
+from Scripts.icons import icon_game
 from Scripts.impacts import Impact
 from Scripts.wall import Wall
 from Scripts.crafting_menu import CraftingMenu
 
 pygame.init()
 
+# Screen Stuff
 DISPLAY_SIZE = (pygame.display.Info().current_w,
                 pygame.display.Info().current_h)
 win = pygame.display.set_mode(DISPLAY_SIZE, pygame.RESIZABLE)
-pygame.display.set_caption("Zombs.io Clone")
+pygame.display.set_caption("Zombois")
+
+# Icon To Be Determined
+#pygame.display.set_icon(pygame.image.load())
 
 game_surface = pygame.Surface(
     (screenSettings.V_WIDTH, screenSettings.V_HEIGHT))
 clock = pygame.time.Clock()
+vignette_surface = pygame.Surface((screenSettings.V_WIDTH, screenSettings.V_HEIGHT))
 
+# Zombie Stuff
 zombies = []
 wave = 1
 zombie_spawn_timer = 0
+wave_wait = 15
 canZombiesSpawn = False
 
+# Game Time Stuff
+night_count = 0
+isNight = False
+dayTimeLength = 30
+nightTimeLength = 40
+dayswitch_time_counter = 0
+
+# Player Stuff
 player = Player(screenSettings.V_WIDTH // 2, screenSettings.V_HEIGHT // 2)
 
+# Resource Stuff
 resources = []
 resource_margin_x = 10
 resource_margin_y = 10
@@ -53,7 +70,10 @@ menu_open = False
 
 
 def draw_window(menu_open=False, crafting_menu=None):
-    game_surface.fill(colors.BG_COLOR)
+    if(isNight):
+        game_surface.fill(colors.NIGHT_COLOR)
+    else:
+        game_surface.fill(colors.DAY_COLOR)
 
     for res in resources:
         res.draw(game_surface)
@@ -83,17 +103,29 @@ def draw_window(menu_open=False, crafting_menu=None):
         colors.WHITE)
     game_surface.blit(stone_text, (10, 30))
 
-    # health bar
+    # Night Count Texts right above health bar
+    night_text = font.render(f"Night: {night_count}", True, colors.WHITE)
+    text_width = night_text.get_width()
+    game_surface.blit(night_text, (screenSettings.V_WIDTH - text_width - 10, 10))
+    # health bar, should be bottom left screen but currently is bottom center
     health_bar_width = 200
     health_bar_height = 20
-    health_bar_x = (screenSettings.V_WIDTH - health_bar_width) // 2
+    health_bar_x = 10
     health_bar_y = screenSettings.V_HEIGHT - health_bar_height - 10
+    health_ratio = player.health / player.max_health
 
+    pygame.draw.rect(
+        game_surface, (30, 30, 30),
+        (health_bar_x + 1, health_bar_y + 1, health_bar_width + 2, health_bar_height + 2)
+    )
     pygame.draw.rect(
         game_surface, colors.RED,
         (health_bar_x, health_bar_y, health_bar_width, health_bar_height))
     pygame.draw.rect(
-        game_surface, colors.GREEN, ((health_bar_x, health_bar_y, (health_bar_width * (player.health /10)), health_bar_height)))
+        game_surface, colors.GREEN,
+        (health_bar_x, health_bar_y, int(health_bar_width * health_ratio), health_bar_height)
+    )
+
     
     #day/night/wave info
     wave_text = font.render(f"Wave: {wave}", True, colors.WHITE)
@@ -111,6 +143,9 @@ def draw_window(menu_open=False, crafting_menu=None):
     scaled_width = int(screenSettings.V_WIDTH * scale)
     scaled_height = int(screenSettings.V_HEIGHT * scale)
 
+    vignette_surface.set_alpha(int(120 * (1 - health_ratio)))
+    vignette_surface.fill((255, 0, 0))
+    
     scaled_surface = pygame.transform.smoothscale(
         game_surface, (scaled_width, scaled_height))
 
@@ -120,11 +155,12 @@ def draw_window(menu_open=False, crafting_menu=None):
     win.fill((0, 0, 0))
 
     win.blit(scaled_surface, (x_offset, y_offset))
+    scaled_surface.blit(vignette_surface, (0, 0))
     pygame.display.update()
 
 
 def spawn_zombies(num):
-    if not canZombiesSpawn:
+    if not canZombiesSpawn and isNight:
         return
         
     margin = 15
@@ -135,11 +171,26 @@ def spawn_zombies(num):
 
 
 def main():
-    global wave, zombie_spawn_timer, resource_spawn_timer, menu_open, canZombiesSpawn
+    global wave, zombie_spawn_timer, resource_spawn_timer, menu_open, canZombiesSpawn, isNight, night_count, dayswitch_time_counter, nightTimeLength, dayTimeLength, wave_wait
     while True:
         clock.tick(screenSettings.FPS)
-        zombie_spawn_timer += 1
-        if zombie_spawn_timer >= screenSettings.FPS * 30 and canZombiesSpawn:
+
+        if isNight:
+            dayswitch_time_counter += 1
+            if dayswitch_time_counter >= screenSettings.FPS * nightTimeLength:
+                isNight = False
+                dayswitch_time_counter = 0
+                print("Day has started")
+                
+        else:
+            dayswitch_time_counter += 1
+            if dayswitch_time_counter >= screenSettings.FPS * dayTimeLength:
+                isNight = True
+                night_count += 1
+                dayswitch_time_counter = 0
+                print(f"Night {night_count} has started")
+                
+        if zombie_spawn_timer >= screenSettings.FPS * wave_wait and canZombiesSpawn and isNight:
             spawn_zombies(wave * 3)
             wave += 1
             zombie_spawn_timer = 0
@@ -210,13 +261,13 @@ def main():
                 else:
                     crafting_menu.handle_event(event)
 
-        resource_spawn_timer += 1
-        if resource_spawn_timer >= max(30, resource_spawn_interval - wave * 5):
-            if len(resources) < 30:
-                x = random.randint(20, screenSettings.V_WIDTH - 20)
-                y = random.randint(20, screenSettings.V_HEIGHT - 20)
-                resources.append(Resource(x, y))
-            resource_spawn_timer = 0
+        # resource_spawn_timer += 1
+        # if resource_spawn_timer >= max(30, resource_spawn_interval - wave * 5):
+        #     if len(resources) < 30:
+        #         x = random.randint(20, screenSettings.V_WIDTH - 20)
+        #         y = random.randint(20, screenSettings.V_HEIGHT - 20)
+        #         resources.append(Resource(x, y))
+        #     resource_spawn_timer = 0
 
         player.handle_input()
         for zombie in zombies:
@@ -252,14 +303,16 @@ def main():
 
         for res in resources[:]:
             if res.update(player):
-                player.add_resource('wood', 1)
-                resources.remove(res)
-
-        # if player.check_dead():
-        #     zombies.clear()
-        #     turrets.clear()
-        #     projectiles.clear()
-        
+                if res.type == 'tree':
+                    player.add_resource('wood', 1)
+                elif res.type == 'stone':
+                    player.add_resource('stone', 1)
+                res.mine_progress = 0
+        if player.check_dead():
+            zombies.clear()
+            turrets.clear()
+            projectiles.clear()
+    
         zombies[:] = [z for z in zombies if z.health > 0]
         walls[:] = [w for w in walls if not w.is_destroyed()]
         

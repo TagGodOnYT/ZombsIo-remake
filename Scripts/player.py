@@ -78,8 +78,9 @@ class Player:
             self.invincibility_timer = 60
 
     def draw(self, surface):
-        pygame.draw.circle(surface, colors.WHITE,
+        pygame.draw.circle(surface, colors.BLACK,
                            (int(self.pos.x), int(self.pos.y)), self.radius)
+        pygame.draw.circle(surface, colors.LIGHT_BROWN, (int(self.pos.x), int(self.pos.y)), (self.radius // 1.25))
 
     def check_dead(self):
         if self.health == 0:

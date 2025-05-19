@@ -6,7 +6,7 @@ from .icons import icon_tree, icon_stone
 
 resource_icons = {
     "tree": 
-        pygame.transform.scale(pygame.image.load(icon_tree), (40, 40)),
+        pygame.transform.scale(pygame.image.load(icon_tree), (60, 60)),
     "stone": 
         pygame.transform.scale(pygame.image.load(icon_stone), (40,40))
 }
@@ -15,7 +15,10 @@ class Resource:
         self.type = random.choice(["tree", "stone"])
         self.image = resource_icons[self.type]
         self.rect = self.image.get_rect(center=(x,y))
-        self.mine_time = 60
+        if self.type == "tree":
+            self.mine_time = 30
+        elif self.type == "stone":
+            self.mine_time = 60
         self.mine_progress = 0
 
     def update(self, player):
