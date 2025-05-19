@@ -165,3 +165,4 @@ pyproject.toml
 .pyproject.toml
 uv.lock
 .uv.lock
+.pythonlibs
