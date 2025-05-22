@@ -71,7 +71,7 @@ def is_build_area_clear(center_x, center_y, size=30):
 
     for turret in turrets:
         turret_rect = pygame.Rect(turret.pos.x - size // 2, turret.pos.y - size // 2, size, size)
-        if build_rect.colliderect(turret_rect.inflate(-1, -1)):
+        if build_rect.colliderect(turret_rect.inflate(-2, -2)):
             return False
 
     return True
@@ -268,7 +268,7 @@ def main():
 
                 # basic turret buy
                 elif event.key == pygame.K_1 and player.get_resource('wood') >= 10:
-                    x, y = snap_to_grid_center(player.get_rect().centerx, player.get_rect().centery)
+                    x, y = snap_to_grid_top_left(player.get_rect().centerx, player.get_rect().centery)
 
                     if is_build_area_clear(x - gameSettings.GRID_SIZE // 2, y - gameSettings.GRID_SIZE // 2):
                         turrets.append(Turret(x, y, "basic"))
@@ -278,7 +278,7 @@ def main():
 
                 # rapid turret buy
                 elif event.key == pygame.K_2 and player.get_resource('wood') >= 15:
-                    x, y = snap_to_grid_center(player.get_rect().centerx, player.get_rect().centery)
+                    x, y = snap_to_grid_top_left(player.get_rect().centerx, player.get_rect().centery)
                     if is_build_area_clear(x - gameSettings.GRID_SIZE // 2, y - gameSettings.GRID_SIZE // 2):
                         turrets.append(Turret(x, y, "rapid"))
                         player.sub_resource("wood", 15)
