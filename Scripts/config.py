@@ -19,5 +19,7 @@ class colors:
   BROWN = (168, 122, 53)
   LIGHT_BROWN = (240, 184, 101)
 
-
+class gameSettings:
+  GRID_SIZE = 30
+  
 __all__ = ['screenSettings','colors']

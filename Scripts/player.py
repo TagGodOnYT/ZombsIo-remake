@@ -17,8 +17,9 @@ class Player:
         }
         self.health = 10
         self.max_health = 10
-        self.invincible = False
-        self.invincibility_timer = 0
+        self.inCombat = False
+        self.combat_timer = 0
+        self.heal_mult = 0
         self.rect = pygame.Rect(0, 0, self.radius * 2, self.radius * 2)
 
     def handle_input(self):
@@ -66,16 +67,20 @@ class Player:
         self.inventory['resources'][resource_name] -= amount
         
     def update(self):
-        if self.invincible:
-            self.invincibility_timer -= 1
-            if self.invincibility_timer <= 0:
-                self.invincible = False
+        if self.inCombat:
+            self.combat_timer -= 1
+            if self.combat_timer <= 0:
+                self.inCombat = False
+        else:
+            self.heal_mult += 0.0005
+            self.health = min(self.health + self.heal_mult, self.max_health)
 
     def take_damage(self, amount):
-        if not self.invincible:
-            self.health -= amount
-            self.invincible = True
-            self.invincibility_timer = 60
+        self.health -= amount
+        if not self.inCombat:
+            self.inCombat = True
+            self.combat_timer = 200
+            self.heal_mult = 0
 
     def draw(self, surface):
         pygame.draw.circle(surface, colors.BLACK,
@@ -83,7 +88,7 @@ class Player:
         pygame.draw.circle(surface, colors.LIGHT_BROWN, (int(self.pos.x), int(self.pos.y)), (self.radius // 1.25))
 
     def check_dead(self):
-        if self.health == 0:
+        if self.health <= 0:
             self.health = self.max_health
             self.clear_resources()
             self.pos = pygame.Vector2(screenSettings.V_WIDTH // 2, screenSettings.V_HEIGHT // 2)
