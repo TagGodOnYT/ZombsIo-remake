@@ -23,16 +23,6 @@ class Resource:
         self.type = random.choice(["tree", "stone"])
         self.image = resource_icons[self.type]
         self.rect = self.image.get_rect()
-        margin = 50
-        attempts = 0
-        while attempts < 100:
-            x_pos = random.randint(margin, screenSettings.V_WIDTH - margin)
-            y_pos = random.randint(margin, screenSettings.V_HEIGHT - margin)
-
-            if is_far_enough(x_pos, y_pos, existing_resources):
-                self.rect = self.image.get_rect(center=(x_pos, y_pos))
-                break
-            attempts += 1
 
         if self.type == "tree":
             self.mine_time = 30

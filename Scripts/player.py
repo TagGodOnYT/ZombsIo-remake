@@ -6,7 +6,7 @@ class Player:
 
     def __init__(self, x, y):
         self.pos = pygame.Vector2(x, y)
-        self.speed = 5
+        self.speed = 3
         self.radius = 15
         self.inventory = {
             "items": {},

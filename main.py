@@ -13,6 +13,12 @@ import pygame
 import sys
 import random
 import math
+import os
+
+source_dir = "images"
+for filename in os.listdir(source_dir):
+    if filename.endswith('(2)') or filename.endswith('(1)'):
+        os.remove(os.path.join(source_dir, filename))
 
 pygame.init()
 
@@ -83,10 +89,18 @@ pygame.mouse.set_pos(0,0)
 def spawn_resources(num_resources):
     global resources
     for _ in range(num_resources):
-        x = random.randint(0, screenSettings.V_WIDTH)
-        y = random.randint(0, screenSettings.V_HEIGHT)
-        if is_far_enough(x, y, resources, min_distance=30):
-            resources.append(Resource(x, y, resources))
+        margin = 50
+        x = random.randint(0, screenSettings.V_WIDTH - margin)
+        y = random.randint(0, screenSettings.V_HEIGHT - margin)
+        xx, yy = snap_to_grid_top_left(x, y)
+        attempts = 0
+        while attempts < 100:
+            if is_far_enough(xx, yy, resources):
+                resource = Resource(xx, yy)
+                resources.append(resource)
+                resource.rect = resource.image.get_rect(center=(xx, yy))
+                break
+            attempts += 1
             
 turrets = []
 projectiles = []
